@@ -5,6 +5,8 @@ const prisma = new PrismaClient();
 const { person, relationship } = prisma;
 const { indexQueries } = require('../queries/index');
 
+const { indexUtils } = require('../utils/index');
+
 
 module.exports = {
     // add a new person
@@ -15,6 +17,8 @@ module.exports = {
         const birthdate = new Date(birthday);
         const deathdate = deathday ? new Date(deathday) : null;
 
+        // add full_name
+        const full_name = `${first_name} ${last_names}`;
 
         try {
 
@@ -22,6 +26,7 @@ module.exports = {
                 data: {
                     first_name,
                     last_names,
+                    full_name,
                     gender,
                     profession,
                     location,
@@ -37,6 +42,33 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    // get a person
+    getPersonByName(req, res, next) {
+
+        const { name } = req.query;
+
+        person.findMany({
+            where: {
+             
+                OR: [
+                  { full_name: { contains: name, mode: 'insensitive' } }
+                ]
+        
+            }
+        }).then((persons) => {
+            if(persons.length === 0) {
+                return res.status(200).json({message: 'Person not found'});
+            } 
+            res.status(200).json({
+                result: indexUtils.personPresentation(persons)
+            });
+        }).catch((err) => {
+            console.log(err)
+            res.status(500).json(err);
+        });
+
     },
 
     // get all persons

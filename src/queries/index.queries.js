@@ -1,10 +1,11 @@
 
 module.exports = {
     getancestors :`
-    SELECT p.*
-    FROM person p
-    JOIN relationship r ON p.id = r.person1_id
-    WHERE r.person2_id = $1 AND r.relationship_type = 'parent-child';
+        SELECT p.first_name, p.last_names, p.gender, 
+            CASE WHEN p.gender = 'M' THEN 'father' ELSE 'mother' END as relationship
+        FROM person p
+        JOIN relationship r ON p.id = r.person1_id
+        WHERE r.person2_id = $1 AND r.relationship_type = 'parent-child';
     `,
 
     getdescendants :`
@@ -17,7 +18,8 @@ module.exports = {
             FROM relationship r
             JOIN descendants d ON r.person1_id = d.id AND r.relationship_type = 'parent-child'
             )
-            SELECT p.*
+            SELECT p.first_name, p.last_names, p.gender, 
+            CASE WHEN p.gender = 'F' THEN 'daughter' ELSE 'son' END as relationship 
             FROM person p
             JOIN descendants d ON p.id = d.id;
         `,
@@ -50,5 +52,11 @@ module.exports = {
             CASE WHEN p.gender = 'M' THEN 'father' ELSE 'mother' END as relationship
         FROM person p
         JOIN ancestors a ON p.id = a.id;
+    `,
+
+    // get a person by last name or first name or both
+    getPersonByName : `
+        SELECT * FROM person
+        WHERE first_name LIKE $1 OR last_names LIKE $1;
     `
 }
