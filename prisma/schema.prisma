@@ -16,6 +16,7 @@ model person {
   location                                     String         @db.VarChar
   birthdate                                    DateTime       @db.Date
   deathdate                                    DateTime?      @db.Date
+  full_name                                    String?        @db.VarChar
   relationship_relationship_person1_idToperson relationship[] @relation("relationship_person1_idToperson")
   relationship_relationship_person2_idToperson relationship[] @relation("relationship_person2_idToperson")
 }

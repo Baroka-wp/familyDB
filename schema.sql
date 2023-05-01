@@ -19,3 +19,8 @@ CREATE TABLE relationship (
 );
 
 
+-- add column full_name to person table
+ALTER TABLE person ADD COLUMN full_name VARCHAR NOT NULL;
+
+-- update full_name column for all persons fullname = first_name + last_names
+UPDATE person SET full_name = CONCAT(first_name, ' ', last_names);
