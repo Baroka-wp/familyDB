@@ -1,4 +1,5 @@
 const { pool } = require('../../db');
+const dayjs = require('dayjs');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -11,27 +12,31 @@ const { indexUtils } = require('../utils/index');
 module.exports = {
     // add a new person
     addPerson(req, res, next) {
-        const { first_name, last_names, gender, profession, location, birthday, deathday } = req.body;
+        const { first_name, last_name, gender, profession, location, 
+            birthday, deathday, father_id,mother_id, spouse_id  } = req.body;
 
         //convert birthdate and deathdate to datetime format
         const birthdate = new Date(birthday);
         const deathdate = deathday ? new Date(deathday) : null;
 
         // add full_name
-        const full_name = `${first_name} ${last_names}`;
+        const full_name = `${first_name} ${last_name}`;
 
         try {
 
             person.create({
                 data: {
                     first_name,
-                    last_names,
+                    last_name,
                     full_name,
                     gender,
                     profession,
                     location,
                     birthdate,
-                    deathdate
+                    deathdate,
+                    father_id,
+                    mother_id,
+                    spouse_id
                 }
             }).then((person) => {
                 res.status(201).send(person);
@@ -42,6 +47,96 @@ module.exports = {
         } catch (err) {
             next(err);
         }
+    },
+
+    // update a person
+
+    updatePerson(req, res, next) {
+        const { person_id } = req.params;
+
+        const myperson = person.findUnique({
+            where: {
+                id: parseInt(person_id)
+            }
+        });
+
+        const { first_name, last_name, gender, full_name, profession, location, 
+            birthday, deathday, father_id,mother_id, spouse_id  } = req.body;
+
+            console.log(birthday);
+
+        const birthdate = deathday !== undefined ?  new Date(birthday) : myperson.birthdate;
+        const deathdate = deathday !== undefined ? new Date(deathday) : myperson.deathdate;
+
+        console.log(birthdate);
+
+        try {
+
+            person.update({
+                where: {
+                    id: parseInt(person_id)
+                },
+                data: {
+                    first_name,
+                    last_name,
+                    full_name,
+                    gender,
+                    profession,
+                    location,
+                    birthdate,
+                    deathdate,
+                    father_id,
+                    mother_id,
+                    spouse_id
+                }
+            }).then((person) => {
+                res.status(201).send(person);
+            }).catch((err) => {
+                console.log(err)
+                res.status(200).send(err);
+            });
+
+        } catch (err) {
+            next(err);
+        }
+
+
+    },
+
+
+    async getPersonwithChildrens (req, res, next) {
+
+        const { person_id } = req.query;
+
+        try {
+            const result = await pool.query(indexQueries.getPersonWithChildren, [person_id]);
+            
+            const persons = result.rows;
+
+            res.status(200).json(persons);
+        } catch (err) {
+            next(err);
+        }
+
+    },
+
+    async getPersonGenealogy (req, res, next) {
+
+        const { person_id } = req.query;
+
+        try {
+            const result = await pool.query(indexQueries.getPersonGenealogy, [person_id]);
+            const person_ansestor = result.rows[0];
+
+            const genealogy = await pool.query(indexQueries.getPersonWithChildren, [person_ansestor.id]);
+
+
+            res.status(200).json(genealogy.rows);
+        } catch (err) {
+            next(err);
+        }
+
+
     },
 
     // get a person
@@ -55,15 +150,21 @@ module.exports = {
                 OR: [
                   { full_name: { contains: name, mode: 'insensitive' } }
                 ]
-        
-            }
+            },
+            
         }).then((persons) => {
             if(persons.length === 0) {
                 return res.status(200).json({message: 'Person not found'});
             } 
-            res.status(200).json({
-                result: indexUtils.personPresentation(persons)
+
+            persons.map((person) => {
+                person.birthdate = person.birthdate ? person.birthdate.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : null;
+                person.deathdate = person.deathdate ? person.deathdate.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : null;
+                person.resume = indexUtils.personPresentation(person);
             });
+
+            res.status(200).json(persons);
+
         }).catch((err) => {
             console.log(err)
             res.status(500).json(err);
@@ -152,6 +253,6 @@ module.exports = {
         } catch (err) {
             next(err);
         }
-    }
+    },
 
 }

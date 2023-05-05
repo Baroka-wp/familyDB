@@ -8,24 +8,22 @@ datasource db {
 }
 
 model person {
-  id                                           Int            @id @default(autoincrement())
-  first_name                                   String         @db.VarChar
-  last_names                                   String         @db.VarChar
-  gender                                       String         @db.Char(1)
-  profession                                   String?        @db.VarChar
-  location                                     String         @db.VarChar
-  birthdate                                    DateTime       @db.Date
-  deathdate                                    DateTime?      @db.Date
-  full_name                                    String?        @db.VarChar
-  relationship_relationship_person1_idToperson relationship[] @relation("relationship_person1_idToperson")
-  relationship_relationship_person2_idToperson relationship[] @relation("relationship_person2_idToperson")
-}
-
-model relationship {
-  id                                     Int    @id @default(autoincrement())
-  person1_id                             Int
-  person2_id                             Int
-  relationship_type                      String @db.VarChar
-  person_relationship_person1_idToperson person @relation("relationship_person1_idToperson", fields: [person1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  person_relationship_person2_idToperson person @relation("relationship_person2_idToperson", fields: [person2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                                    Int       @id @default(autoincrement())
+  first_name                            String    @db.VarChar(50)
+  last_name                             String    @db.VarChar(50)
+  full_name                             String    @db.VarChar(50)
+  gender                                String    @db.Char(1)
+  profession                            String?   @db.VarChar(50)
+  location                              String?   @db.VarChar(100)
+  birthdate                             DateTime? @db.Date
+  deathdate                             DateTime? @db.Date
+  father_id                             Int?
+  mother_id                             Int?
+  spouse_id                             Int?
+  person_person_father_idToperson       person?   @relation("person_father_idToperson", fields: [father_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_person_person_father_idToperson person[]  @relation("person_father_idToperson")
+  person_person_mother_idToperson       person?   @relation("person_mother_idToperson", fields: [mother_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_person_person_mother_idToperson person[]  @relation("person_mother_idToperson")
+  person_person_spouse_idToperson       person?   @relation("person_spouse_idToperson", fields: [spouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_person_person_spouse_idToperson person[]  @relation("person_spouse_idToperson")
 }
