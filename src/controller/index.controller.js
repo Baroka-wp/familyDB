@@ -121,17 +121,20 @@ module.exports = {
     },
 
     async getPersonGenealogy (req, res, next) {
-
         const { person_id } = req.query;
 
         try {
             const result = await pool.query(indexQueries.getPersonGenealogy, [person_id]);
             const person_ansestor = result.rows[0];
 
+            if(!person_ansestor) {
+                const result =  await pool.query(indexQueries.getPersonWithChildren, [person_id]);
+                return res.status(200).json(result.rows[0].get_family_tree);
+            }
+
             const genealogy = await pool.query(indexQueries.getPersonWithChildren, [person_ansestor.id]);
-
-
-            res.status(200).json(genealogy.rows);
+                        
+            res.status(200).json(genealogy.rows[0].get_family_tree);
         } catch (err) {
             next(err);
         }
@@ -154,13 +157,15 @@ module.exports = {
             
         }).then((persons) => {
             if(persons.length === 0) {
-                return res.status(200).json({message: 'Person not found'});
+                return res.status(200).json([]);
             } 
 
             persons.map((person) => {
                 person.birthdate = person.birthdate ? person.birthdate.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : null;
                 person.deathdate = person.deathdate ? person.deathdate.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'}) : null;
                 person.resume = indexUtils.personPresentation(person);
+                person.value = person.id;
+                person.label = person.full_name;
             });
 
             res.status(200).json(persons);

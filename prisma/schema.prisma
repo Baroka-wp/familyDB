@@ -10,16 +10,16 @@ datasource db {
 model person {
   id                                    Int       @id @default(autoincrement())
   first_name                            String    @db.VarChar(50)
-  last_name                             String    @db.VarChar(50)
-  full_name                             String    @db.VarChar(50)
   gender                                String    @db.Char(1)
   profession                            String?   @db.VarChar(50)
   location                              String?   @db.VarChar(100)
   birthdate                             DateTime? @db.Date
   deathdate                             DateTime? @db.Date
   father_id                             Int?
+  last_name                             String    @db.VarChar(50)
   mother_id                             Int?
   spouse_id                             Int?
+  full_name                             String    @db.VarChar(50)
   person_person_father_idToperson       person?   @relation("person_father_idToperson", fields: [father_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   other_person_person_father_idToperson person[]  @relation("person_father_idToperson")
   person_person_mother_idToperson       person?   @relation("person_mother_idToperson", fields: [mother_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
