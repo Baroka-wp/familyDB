@@ -27,6 +27,22 @@ UPDATE person SET full_name = CONCAT(first_name, ' ', last_names);
 
 
 -- 
+CREATE OR REPLACE FUNCTION get_children(id INTEGER, depth INTEGER)
+RETURNS JSON AS $$
+SELECT json_agg(json_build_object(
+    'id', p.id,
+    'attributes', json_build_object(
+        'location', p.location,
+        'profession', p.profession,
+        'birthdate', p.birthdate,
+        'deathdate', p.deathdate
+    ),
+    'name', p.full_name,
+    'children', CASE WHEN depth > 0 THEN get_children(p.id, depth - 1) ELSE JSON '[]' END
+)) FROM person p
+WHERE p.father_id = $1 OR p.mother_id = $1;
+$$ LANGUAGE SQL;
+
 CREATE OR REPLACE FUNCTION get_family_tree(id INTEGER, max_depth INTEGER)
 RETURNS JSON AS $$
 WITH RECURSIVE tree AS (
@@ -51,20 +67,4 @@ SELECT json_build_object(
     'children', get_children(t.id, $2 - t.depth - 1)
 ) FROM tree t
 WHERE t.depth = 0;
-$$ LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION get_children(id INTEGER, depth INTEGER)
-RETURNS JSON AS $$
-SELECT json_agg(json_build_object(
-    'id', p.id,
-    'attributes', json_build_object(
-        'location', p.location,
-        'profession', p.profession,
-        'birthdate', p.birthdate,
-        'deathdate', p.deathdate
-    ),
-    'name', p.full_name,
-    'children', CASE WHEN depth > 0 THEN get_children(p.id, depth - 1) ELSE JSON '[]' END
-)) FROM person p
-WHERE p.father_id = $1 OR p.mother_id = $1;
 $$ LANGUAGE SQL;

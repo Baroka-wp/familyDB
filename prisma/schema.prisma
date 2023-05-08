@@ -2,10 +2,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL_TEST")
+// }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model person {
   id                                    Int       @id @default(autoincrement())
@@ -19,7 +27,7 @@ model person {
   last_name                             String    @db.VarChar(50)
   mother_id                             Int?
   spouse_id                             Int?
-  full_name                             String    @db.VarChar(50)
+  full_name                             String    
   person_person_father_idToperson       person?   @relation("person_father_idToperson", fields: [father_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   other_person_person_father_idToperson person[]  @relation("person_father_idToperson")
   person_person_mother_idToperson       person?   @relation("person_mother_idToperson", fields: [mother_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

@@ -1,6 +1,31 @@
 
 module.exports = {
-    getancestors :`
+
+    addPerson: `
+        INSERT INTO person(first_name, last_name, gender, profession, location, 
+            birthdate, deathdate, father_id, mother_id, spouse_id, full_name)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING *;
+        `,
+
+    updatePerson: `
+        UPDATE person SET 
+          first_name = COALESCE($1, first_name), 
+          last_name = COALESCE($2, last_name), 
+          gender = COALESCE($3, gender),
+          profession = COALESCE($4, profession),
+          location = COALESCE($5, location),
+          birthdate = COALESCE($6, birthdate),
+          deathdate = COALESCE($7, deathdate),
+          father_id = COALESCE($8, father_id),
+          mother_id = COALESCE($9, mother_id),
+          spouse_id = COALESCE($10, spouse_id),
+          full_name = COALESCE($11, full_name)
+        WHERE id = $12
+        RETURNING *
+      `,
+
+    getancestors:`
             SELECT
             p1.id,
             p1.full_name AS person_name,
@@ -35,56 +60,11 @@ module.exports = {
             p1.id = $1;
     `,
 
-    getdescendants :`
-        WITH RECURSIVE descendants(id) AS (
-            SELECT person2_id
-            FROM relationship
-            WHERE person1_id = $1 AND relationship_type = 'parent-child'
-            UNION
-            SELECT r.person2_id
-            FROM relationship r
-            JOIN descendants d ON r.person1_id = d.id AND r.relationship_type = 'parent-child'
-            )
-            SELECT p.first_name, p.last_names, p.gender, 
-            CASE WHEN p.gender = 'F' THEN 'daughter' ELSE 'son' END as relationship 
-            FROM person p
-            JOIN descendants d ON p.id = d.id;
-        `,
-
-    getAnscestorsAndDescendants : `
-        WITH RECURSIVE descendants(id) AS (
-            SELECT person2_id
-            FROM relationship
-            WHERE person1_id = $1 AND relationship_type = 'parent-child'
-            UNION
-            SELECT r.person2_id
-            FROM relationship r
-            JOIN descendants d ON r.person1_id = d.id AND r.relationship_type = 'parent-child'
-        ),
-        ancestors(id) AS (
-            SELECT person1_id
-            FROM relationship
-            WHERE person2_id = $1 AND relationship_type = 'parent-child'
-            UNION
-            SELECT r.person1_id
-            FROM relationship r
-            JOIN ancestors a ON r.person2_id = a.id AND r.relationship_type = 'parent-child'
-        )
-        SELECT p.first_name, p.last_names, p.gender, 'descendant' as type, 
-            CASE WHEN p.gender = 'F' THEN 'daughter' ELSE 'son' END as relationship 
-        FROM person p
-        JOIN descendants d ON p.id = d.id
-        UNION
-        SELECT p.first_name, p.last_names, p.gender, 'ancestor' as type, 
-            CASE WHEN p.gender = 'M' THEN 'father' ELSE 'mother' END as relationship
-        FROM person p
-        JOIN ancestors a ON p.id = a.id;
-    `,
-
     // get a person by last name or first name or both
     getPersonByName : `
-        SELECT * FROM person
-        WHERE first_name LIKE $1 OR last_names LIKE $1;
+        SELECT *
+        FROM person
+        WHERE full_name ILIKE $1 || '%';
     `,
 
     getPersonChildreByDeth : `
@@ -110,14 +90,12 @@ module.exports = {
                 WHERE (p.father_id = parent.id OR p.mother_id = parent.id)
             ) AS parents
         FROM person p
-        WHERE p.full_name ILIKE $1 || '%';
+        WHERE p.full_name !LIKE lower('%'|| $1 ||'%');;
     `,
 
     getPersonWithChildren : `
             SELECT get_family_tree($1, 5);
         `,
-
-   
 
     getPersonGenealogy: `
         WITH RECURSIVE ancestors AS (

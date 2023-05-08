@@ -6,10 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "migrate": "prisma migrate dev --name init",
+    "migration": "prisma migrate dev --name init",
     "format:fix": "prettier --write .",
     "lint:fix": "eslint --fix .",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "test": "jest --watchAll"
   },
   "author": "Baroka",
   "license": "ISC",
@@ -25,13 +26,19 @@
     "react-d3-tree": "^3.5.2"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "@types/supertest": "^2.0.12",
     "babel-eslint": "^10.1.0",
+    "chai": "^4.3.7",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
+    "jest": "^29.5.0",
+    "mocha": "^10.2.0",
     "prettier": "^2.8.7",
-    "prisma": "^4.12.0"
+    "prisma": "^4.12.0",
+    "supertest": "^6.3.3"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",
